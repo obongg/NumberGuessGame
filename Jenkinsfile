@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/obongg/NumberGuessGame.git', credentialsId: '8688c497-760e-4259-8c37-cbfe8ad065f8'
+                git url: 'https://github.com/obongg/NumberGuessGame.git', credentialsId: '8688c497-760e-4259-8c37-cbfe8ad065f8'
                 
             }
         }
