@@ -1,16 +1,10 @@
 pipeline {
     agent any
 
-<<<<<<< HEAD
     environment {
         JAVA_HOME = tool name: 'jdk17', type: 'jdk'
         MAVEN_HOME = tool name: 'Maven', type: 'maven'
         CATALINA_HOME = '/home/ec2-user/tomcat10'
-=======
-    tools {
-        maven 'Maven'    
-        jdk 'jdk17'  
->>>>>>> 26ff3363985e824b1d565935c5699732c9d8c026
     }
 
     stages {
