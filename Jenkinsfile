@@ -26,29 +26,25 @@ pipeline {
             }
         }
 
-        stage('Deploy to Tomcat') {
-            steps {
-                script {
-                    // Give Jenkins user ownership of Tomcat directories
-                    sh "sudo chown -R jenkins:jenkins $CATALINA_HOME"
-                    sh "sudo chmod -R 755 $CATALINA_HOME"
+       stage('Deploy to Tomcat') {
+    steps {
+        script {
+            echo "Stopping Tomcat..."
+            sh "$CATALINA_HOME/bin/shutdown.sh || true"
+            sleep 5
 
-                    echo "Stopping Tomcat..."
-                    sh "$CATALINA_HOME/bin/shutdown.sh || true"
-                    sleep 5
+            echo "Cleaning old deployment..."
+            sh "rm -rf $CATALINA_HOME/webapps/ROOT*"
 
-                    echo "Cleaning old deployment..."
-                    sh "rm -rf $CATALINA_HOME/webapps/ROOT*"
+            echo "Deploying new WAR..."
+            sh "cp target/*.war $CATALINA_HOME/webapps/ROOT.war"
 
-                    echo "Deploying new WAR..."
-                    sh "cp target/*.war $CATALINA_HOME/webapps/ROOT.war"
-
-                    echo "Starting Tomcat..."
-                    sh "$CATALINA_HOME/bin/startup.sh"
-                }
-            }
+            echo "Starting Tomcat..."
+            sh "$CATALINA_HOME/bin/startup.sh"
+           }
         }
     }
+}
 
     post {
         success {
