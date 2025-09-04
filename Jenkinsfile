@@ -1,9 +1,10 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'    
-        jdk 'Java 17'  
+    environment {
+        JAVA_HOME = tool name: 'jdk17', type: 'jdk'
+        MAVEN_HOME = tool name: 'Maven', type: 'maven'
+        CATALINA_HOME = '/home/ec2-user/tomcat10'
     }
 
     stages {
@@ -15,46 +16,46 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh "${MAVEN_HOME}/bin/mvn clean package -DskipTests"
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit 'target/surefire-reports/*.xml'
-                }
+                sh "${MAVEN_HOME}/bin/mvn test"
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
-                sh '''
+                script {
+                    // Give Jenkins user ownership of Tomcat directories
+                    sh "sudo chown -R jenkins:jenkins $CATALINA_HOME"
+                    sh "sudo chmod -R 755 $CATALINA_HOME"
+
                     echo "Stopping Tomcat..."
-                    /home/ec2-user/tomcat10/bin/shutdown.sh || true
+                    sh "$CATALINA_HOME/bin/shutdown.sh || true"
+                    sleep 5
 
                     echo "Cleaning old deployment..."
-                    rm -rf /home/ec2-user/tomcat10/webapps/ROOT*
+                    sh "rm -rf $CATALINA_HOME/webapps/ROOT*"
 
                     echo "Deploying new WAR..."
-                    cp target/*.war /home/ec2-user/tomcat10/webapps/ROOT.war
+                    sh "cp target/*.war $CATALINA_HOME/webapps/ROOT.war"
 
                     echo "Starting Tomcat..."
-                    /home/ec2-user/tomcat10/bin/startup.sh
-                '''
+                    sh "$CATALINA_HOME/bin/startup.sh"
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build, Test, and Deployment completed successfully!'
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo '❌ Something went wrong. Check logs for errors.'
+            echo "Pipeline failed. Check the logs."
         }
     }
 }
