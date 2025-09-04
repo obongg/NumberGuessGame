@@ -1,58 +1,46 @@
 pipeline {
     agent any
 
-    environment {
-        JAVA_HOME = tool name: 'jdk17', type: 'jdk'
-        MAVEN_HOME = tool name: 'Maven', type: 'maven'
-        CATALINA_HOME = '/home/ec2-user/tomcat10'
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/obongg/NumberGuessGame.git'
+                git 'https://github.com/yourusername/NumberGuessGame.git'
             }
         }
 
-        stage('Build') {
+        stage('Build & Test') {
             steps {
-                sh "${MAVEN_HOME}/bin/mvn clean package -DskipTests"
+                // Build the project and run any unit tests
+                sh 'mvn clean install'
             }
         }
 
-        stage('Test') {
+        stage('Static Analysis') {
             steps {
-                sh "${MAVEN_HOME}/bin/mvn test"
+                // Optional: code quality checks
+                sh 'mvn checkstyle:check pmd:pmd spotbugs:check || true'
             }
         }
 
-       stage('Deploy to Tomcat') {
-    steps {
-        script {
-            echo "Stopping Tomcat..."
-            sh "$CATALINA_HOME/bin/shutdown.sh || true"
-            sleep 5
-
-            echo "Cleaning old deployment..."
-            sh "rm -rf $CATALINA_HOME/webapps/ROOT*"
-
-            echo "Deploying new WAR..."
-            sh "cp target/*.war $CATALINA_HOME/webapps/ROOT.war"
-
-            echo "Starting Tomcat..."
-            sh "$CATALINA_HOME/bin/startup.sh"
-           }
+        stage('Run with Jetty') {
+            steps {
+                // Start Jetty server for your servlet/JSP project
+                sh 'mvn jetty:run &'
+                
+                // Optional: Wait a few seconds to ensure server starts
+                sh 'sleep 10'
+                
+                echo 'Application deployed on Jetty!'
+            }
         }
     }
-}
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo 'Pipeline completed successfully ✅'
         }
         failure {
-            echo "Pipeline failed. Check the logs."
+            echo 'Pipeline failed ❌'
         }
     }
 }
-
