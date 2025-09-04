@@ -29,6 +29,9 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 script {
+                    // Give Jenkins user ownership of Tomcat directories
+                    sh "sudo chown -R jenkins:jenkins $CATALINA_HOME"
+                    sh "sudo chmod -R 755 $CATALINA_HOME"
 
                     echo "Stopping Tomcat..."
                     sh "$CATALINA_HOME/bin/shutdown.sh || true"
