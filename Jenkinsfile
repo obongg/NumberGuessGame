@@ -15,11 +15,11 @@ pipeline {
                 sh 'mvn clean install'
             }
         }
-
-        stage('Static Analysis') {
+        stage('Code Quality - SonarQube') {
             steps {
-                // Optional: code quality checks
-                sh 'mvn checkstyle:check pmd:pmd spotbugs:check || true'
+                withSonarQubeEnv('MySonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
             }
         }
 
