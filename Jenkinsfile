@@ -10,7 +10,6 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                // Build the project and run any unit tests
                 sh 'mvn clean install'
             }
         }
@@ -25,12 +24,8 @@ pipeline {
 
         stage('Run with Jetty') {
             steps {
-                // Start Jetty server for your servlet/JSP project
                 sh 'mvn jetty:run &'
-                
-                // Optional: Wait a few seconds to ensure server starts
                 sh 'sleep 10'
-                
                 echo 'Application deployed on Jetty!'
             }
         }
@@ -44,7 +39,8 @@ pipeline {
                 body: """<p>Good news!</p>
                          <p>Build <b>${env.BUILD_NUMBER}</b> succeeded.</p>
                          <p>Check details: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
-                to: 'esthermonday3@gmail.com'
+                to: 'esthermonday3@gmail.com',
+                recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider']]
             )
         }
         failure {
@@ -54,8 +50,14 @@ pipeline {
                 body: """<p>Oops!</p>
                          <p>Build <b>${env.BUILD_NUMBER}</b> failed.</p>
                          <p>Check logs: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
-                to: 'esthermonday3@gmail.com'
+                to: 'esthermonday3@gmail.com',
+                recipientProviders: [[$class: 'CulpritsRecipientProvider'], [$class: 'DevelopersRecipientProvider']]
             )
+        }
+        always {
+            script {
+                echo "📧 Email notification attempted via Extended Email plugin"
+            }
         }
     }
 }
